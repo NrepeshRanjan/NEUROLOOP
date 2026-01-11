@@ -108,6 +108,7 @@ const App: React.FC = () => {
     [gameIntervalRef, spawnIntervalRef, gameTimerRef].forEach(ref => {
       if (ref.current) clearInterval(ref.current);
     });
+    audioService.stopDrone();
     audioService.playClick();
   }, []);
 
@@ -149,6 +150,7 @@ const App: React.FC = () => {
 
   const startGame = useCallback((gameType: GameType) => {
     audioService.playStart();
+    audioService.startDrone(); // Start Ambient
     setGameState({ 
       ...INITIAL_GAME_STATE, 
       isRunning: true, 
@@ -480,6 +482,8 @@ const App: React.FC = () => {
       });
       setCircles([]);
       
+      audioService.playGameOver(); // Stop drone, play fail sound
+
       if (appConfig?.global_ads_enabled && appConfig?.interstitial_enabled) {
         setTimeout(() => setActiveAd('interstitial'), 1000);
       }
@@ -500,7 +504,7 @@ const App: React.FC = () => {
               ...gs,
               fluxPolarity: gs.fluxPolarity === 'white' ? 'red' : 'white'
           }));
-          audioService.playClick();
+          audioService.playFluxFlip(); // Specific Sound
       }
       
       if (gameState.activeGame === 'orbit') {
@@ -508,7 +512,7 @@ const App: React.FC = () => {
               const newRadius = gs.orbitRadius === 0 ? 1 : 0;
               return { ...gs, orbitRadius: newRadius };
           });
-          audioService.playClick();
+          audioService.playOrbitSwitch(); // Specific Sound
       }
 
       if (gameState.activeGame === 'phase') {
@@ -517,7 +521,7 @@ const App: React.FC = () => {
           const diff = Math.abs(currentSize - targetSize);
           
           if (diff < 40) { 
-              audioService.playTargetHit();
+              audioService.playPhaseSync(); // NEW: Harmonic Sync Sound
               setGameState(gs => ({ ...gs, score: gs.score + 25, message: "SYNC PERFECT" }));
           } else {
               audioService.playTargetMiss();
@@ -543,7 +547,7 @@ const App: React.FC = () => {
             return c;
         }));
         setGameState(gs => ({ ...gs, score: gs.score + 5 }));
-        audioService.playClick();
+        audioService.playGatherCatch(); // NEW: Fluid Catch Sound
     }
   };
 

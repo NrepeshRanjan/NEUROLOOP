@@ -27,18 +27,18 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
   };
 
   return (
-    <div className="relative flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none">
-       {/* Sound Toggle in Menu */}
-       <div className="absolute -top-16 right-4 md:right-0">
+    <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none">
+       {/* Sound Toggle - Fixed Top Right */}
+       <div className="fixed top-4 right-4 z-50">
           <button 
             onClick={toggleSound}
-            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 ${isMuted ? 'bg-red-500/10 text-red-400' : 'bg-indigo-500/10 text-indigo-400'}`}
+            className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-95 ${isMuted ? 'bg-red-900/80 text-red-400 border border-red-500' : 'bg-indigo-900/80 text-indigo-400 border border-indigo-500'}`}
           >
              {isMuted ? '🔇' : '🔊'}
           </button>
        </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full p-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full p-4 mt-8">
         {GAMES.map((game) => (
           <button
             key={game.id}
