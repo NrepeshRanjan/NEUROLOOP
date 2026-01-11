@@ -5,6 +5,7 @@ import { GameArea } from './components/GameArea';
 import { ControlPanel } from './components/ControlPanel';
 import { GameSelector } from './components/GameSelector';
 import { Modal } from './components/Modal';
+import { AdOverlay } from './components/AdOverlay'; // New import
 import { BrandingFooter } from './components/BrandingFooter';
 import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -13,6 +14,7 @@ import { NEUROCASUAL_INSIGHT_MODAL_ID } from './constants';
 import { getNeuroCasualInsight } from './services/geminiService';
 import { fetchAppConfig, supabase } from './services/supabaseService';
 import { AuthService } from './services/authService';
+import { audioService } from './services/audioService'; // New import
 
 const INITIAL_GAME_STATE: GameState = {
   isRunning: false,
@@ -52,7 +54,9 @@ const App: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [geminiInsight, setGeminiInsight] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [activeAd, setActiveAd] = useState<'interstitial' | 'rewarded' | null>(null); // New state
 
   const gameIntervalRef = useRef<number | null>(null);
   const spawnIntervalRef = useRef<number | null>(null);
@@ -60,7 +64,7 @@ const App: React.FC = () => {
   const clickTimesRef = useRef<number[]>([]);
 
   useEffect(() => {
-    fetchAppConfig();
+    fetchAppConfig().then(setAppConfig);
     const { data: authListener } = (supabase.auth as any).onAuthStateChange((_: any, s: any) => setSession(s));
     AuthService.getSession().then(setSession);
     return () => authListener?.unsubscribe();
@@ -69,17 +73,25 @@ const App: React.FC = () => {
   const openModal = useCallback((content: string) => {
     setGeminiInsight(content);
     setModalOpen(true);
+    audioService.playLevelUp(); // Sound effect
   }, []);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setGeminiInsight('');
+    audioService.playClick(); // Sound effect
   }, []);
+
+  const handleAdClose = () => {
+    setActiveAd(null);
+    audioService.playClick();
+  };
 
   const applyRuleShift = useCallback(() => {
     if (!gameState.activeGame) return;
 
     setGameState(prev => ({ ...prev, ruleShiftsApplied: prev.ruleShiftsApplied + 1 }));
+    audioService.playLevelUp(); // Sound effect on shift
     
     setCurrentRules(prev => {
       const gameType = gameState.activeGame;
@@ -111,11 +123,13 @@ const App: React.FC = () => {
   }, [gameState.activeGame]);
 
   const selectGame = (game: GameType) => {
+    audioService.playClick();
     setGameState(prev => ({ ...prev, activeGame: game }));
     startGame(game);
   };
 
   const startGame = useCallback((gameType: GameType) => {
+    audioService.playStart(); // Sound effect
     setGameState({ 
       ...INITIAL_GAME_STATE, 
       isRunning: true, 
@@ -214,12 +228,12 @@ const App: React.FC = () => {
            dx = 0; dy = 0;
            color = isLeft ? 'bg-indigo-700' : 'bg-slate-800';
            if (currentRules.variation === 'subliminal-lean') {
-              if (isLeft) color = 'bg-indigo-600'; // Barely perceptible difference
+              if (isLeft) color = 'bg-indigo-600'; 
            }
         } else if (gameType === 'shift' && currentRules.variation === 'color-disorientation') {
           isTarget = Math.random() > 0.5;
           color = isTarget ? 'bg-indigo-500' : 'bg-rose-600';
-          if (Math.random() > 0.8) color = 'bg-amber-400'; // Chaos color
+          if (Math.random() > 0.8) color = 'bg-amber-400'; 
         } else if (gameType === 'blind' && currentRules.variation === 'static-ghost') {
           if (Math.random() > 0.6) type = 'phantom';
         }
@@ -270,11 +284,17 @@ const App: React.FC = () => {
         if (ref.current) clearInterval(ref.current);
       });
       setCircles([]);
+      
+      // Ad Logic check
+      if (appConfig?.global_ads_enabled && appConfig?.interstitial_enabled) {
+        setTimeout(() => setActiveAd('interstitial'), 1000); // Trigger ad after 1s
+      }
+
       getNeuroCasualInsight(prev.score, prev.accuracy, prev.averageClickSpeed, prev.ruleShiftsApplied)
         .then(openModal);
       return { ...prev, isRunning: false };
     });
-  }, [openModal]);
+  }, [openModal, appConfig]);
 
   const handleCircleClick = (id: string, isTarget: boolean, type?: string) => {
     if (!gameState.isRunning) return;
@@ -302,6 +322,12 @@ const App: React.FC = () => {
         scoreGain = isTarget ? 10 : -8;
       }
 
+      if (hit) {
+        audioService.playTargetHit();
+      } else {
+        audioService.playTargetMiss();
+      }
+
       const newEchoBuffer = prev.activeGame === 'echo' 
         ? [...prev.echoBuffer, { x: circles.find(c => c.id === id)?.x || 0, y: circles.find(c => c.id === id)?.y || 0, timestamp: now, type: 'click' }]
         : prev.echoBuffer;
@@ -325,6 +351,7 @@ const App: React.FC = () => {
 
   const handleAreaClick = () => {
     if (!gameState.isRunning) return;
+    audioService.playTargetMiss(); // Sound effect
     setGameState(p => ({
       ...p,
       totalClicks: p.totalClicks + 1,
@@ -374,7 +401,7 @@ const App: React.FC = () => {
       onMouseMove={handleInteraction}
     >
       {!gameState.activeGame && !gameState.isRunning ? (
-        <GameSelector onSelect={selectGame} />
+        <GameSelector onSelect={selectGame} appConfig={appConfig} />
       ) : (
         <>
           <GameArea
@@ -407,6 +434,18 @@ const App: React.FC = () => {
             onEndGame={endGame}
           />
         </>
+      )}
+
+      {/* Ad Overlay Simulation */}
+      {activeAd && (
+        <AdOverlay 
+          type={activeAd} 
+          onClose={handleAdClose} 
+          onReward={() => {
+            handleAdClose();
+            // Reward logic if needed
+          }} 
+        />
       )}
 
       <Modal isOpen={modalOpen} onClose={closeModal} id={NEUROCASUAL_INSIGHT_MODAL_ID}>
