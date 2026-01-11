@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GameType, AppConfig } from '../types';
+import { audioService } from '../services/audioService';
 
 interface GameSelectorProps {
   onSelect: (game: GameType) => void;
@@ -17,8 +18,26 @@ const GAMES: { id: GameType; name: string; description: string; icon: string }[]
 ];
 
 const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
+  const [isMuted, setIsMuted] = useState(audioService.getMuted());
+
+  const toggleSound = () => {
+    const newState = audioService.toggleMute();
+    setIsMuted(newState);
+    if (!newState) audioService.playClick();
+  };
+
   return (
-    <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none">
+    <div className="relative flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none">
+       {/* Sound Toggle in Menu */}
+       <div className="absolute -top-16 right-4 md:right-0">
+          <button 
+            onClick={toggleSound}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 ${isMuted ? 'bg-red-500/10 text-red-400' : 'bg-indigo-500/10 text-indigo-400'}`}
+          >
+             {isMuted ? '🔇' : '🔊'}
+          </button>
+       </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full p-4">
         {GAMES.map((game) => (
           <button

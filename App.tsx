@@ -31,7 +31,7 @@ const INITIAL_GAME_STATE: GameState = {
   message: "SYSTEM READY",
   // New State Defaults
   orbitAngle: 0,
-  orbitRadius: 0, // 0 = inner, 1 = outer
+  orbitRadius: 0, 
   fluxPolarity: 'white',
   breathSize: 60,
   avoidPos: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
@@ -65,17 +65,17 @@ const App: React.FC = () => {
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [activeAd, setActiveAd] = useState<'interstitial' | 'rewarded' | null>(null);
-  const [isHoldingBreath, setIsHoldingBreath] = useState(false); // For BREATH game
+  const [isHoldingBreath, setIsHoldingBreath] = useState(false); 
 
   const gameIntervalRef = useRef<number | null>(null);
   const spawnIntervalRef = useRef<number | null>(null);
   const gameTimerRef = useRef<number | null>(null);
   
-  // For interaction tracking
+  // Refs for physics loop
   const mousePosRef = useRef({ x: window.innerWidth/2, y: window.innerHeight/2 });
-  // Refs to sync state between loops without dependency issues
   const orbitAngleRef = useRef(0);
   const orbitRadiusRef = useRef(0);
+  const orbitInertiaRef = useRef(0); // Smooth transition between tracks
 
   useEffect(() => {
     fetchAppConfig().then(setAppConfig);
@@ -101,11 +101,51 @@ const App: React.FC = () => {
     audioService.playClick();
   };
 
+  const goHome = useCallback(() => {
+    // Reset everything
+    setGameState({ ...INITIAL_GAME_STATE, isRunning: false, activeGame: null });
+    setCircles([]);
+    [gameIntervalRef, spawnIntervalRef, gameTimerRef].forEach(ref => {
+      if (ref.current) clearInterval(ref.current);
+    });
+    audioService.playClick();
+  }, []);
+
   const selectGame = (game: GameType) => {
     audioService.playClick();
     setGameState(prev => ({ ...prev, activeGame: game }));
     startGame(game);
   };
+
+  // --- SILENT VARIATION ENGINE ---
+  const triggerSilentRuleShift = useCallback(() => {
+    if (!gameState.isRunning) return;
+
+    // "Silent" shift: Change physics constants without UI feedback
+    setCurrentRules(prev => {
+        const speedMod = Math.random() > 0.5 ? 1.2 : 0.8;
+        const sizeMod = Math.random() > 0.5 ? 5 : -5;
+        
+        // Audio cue for subconscious awareness
+        audioService.playRuleShift(true); // true = silent/subtle
+
+        return {
+            ...prev,
+            minSpeed: Math.max(0.5, prev.minSpeed * speedMod),
+            maxSpeed: Math.min(6, prev.maxSpeed * speedMod),
+            minCircleSize: Math.max(10, prev.minCircleSize + sizeMod),
+            // Sometimes invert spawn rates
+            spawnInterval: Math.max(400, prev.spawnInterval + (Math.random() * 400 - 200))
+        };
+    });
+    
+    // Occasionally update message strictly for flavor
+    if (Math.random() > 0.8) {
+        setGameState(gs => ({ ...gs, message: "ADAPTING..." }));
+    }
+
+  }, [gameState.isRunning]);
+
 
   const startGame = useCallback((gameType: GameType) => {
     audioService.playStart();
@@ -113,7 +153,7 @@ const App: React.FC = () => {
       ...INITIAL_GAME_STATE, 
       isRunning: true, 
       activeGame: gameType,
-      message: `LOADED: ${gameType.toUpperCase()}` 
+      message: "SYNC ESTABLISHED"
     });
     
     setCircles([]);
@@ -122,19 +162,26 @@ const App: React.FC = () => {
     // Reset Refs
     orbitAngleRef.current = 0;
     orbitRadiusRef.current = 0;
+    orbitInertiaRef.current = 0;
 
     // Clear loops
     [gameIntervalRef, spawnIntervalRef, gameTimerRef].forEach(ref => {
       if (ref.current) clearInterval(ref.current);
     });
 
-    // 1. Timer Loop
+    // 1. Timer Loop (Logic Updates & Silent Shifts)
     gameTimerRef.current = window.setInterval(() => {
       setGameState(prev => {
-        if (prev.gameTime >= 90) { // Extended time for flow
+        if (prev.gameTime >= 90) { 
           endGame();
           return prev;
         }
+        
+        // Trigger silent variation every ~15 seconds
+        if (prev.gameTime > 0 && prev.gameTime % 15 === 0) {
+            triggerSilentRuleShift();
+        }
+
         return { ...prev, gameTime: prev.gameTime + 1 };
       });
     }, 1000);
@@ -145,32 +192,37 @@ const App: React.FC = () => {
         if (!prevState.isRunning) return prevState;
 
         let newState = { ...prevState };
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-
+        
         // --- ORBIT LOGIC ---
         if (gameType === 'orbit') {
-          newState.orbitAngle = (prevState.orbitAngle + 0.05) % (Math.PI * 2);
-          orbitAngleRef.current = newState.orbitAngle; // Sync ref
+          // Accelerate angle over time
+          const speedMultiplier = 1 + (prevState.gameTime * 0.01);
+          newState.orbitAngle = (prevState.orbitAngle + (0.04 * speedMultiplier)) % (Math.PI * 2);
+          orbitAngleRef.current = newState.orbitAngle; 
+          
+          // Smooth transition for radius (Inertia)
+          const targetRadius = prevState.orbitRadius; 
+          const diff = targetRadius - orbitInertiaRef.current;
+          orbitInertiaRef.current += diff * 0.1; // Smooth lerp
+          orbitRadiusRef.current = orbitInertiaRef.current;
         }
 
         // --- BREATH LOGIC ---
         if (gameType === 'breath') {
           if (isHoldingBreath) {
-            newState.breathSize = Math.min(250, prevState.breathSize + 4);
+            newState.breathSize = Math.min(250, prevState.breathSize + 5); // Grow faster
           } else {
-            newState.breathSize = Math.max(40, prevState.breathSize - 3);
+            newState.breathSize = Math.max(40, prevState.breathSize - 3); // Shrink slower
           }
         }
 
         // --- AVOID LOGIC ---
         if (gameType === 'avoid') {
-           // Smooth follow mouse
            const dx = mousePosRef.current.x - prevState.avoidPos.x;
            const dy = mousePosRef.current.y - prevState.avoidPos.y;
            newState.avoidPos = {
-             x: prevState.avoidPos.x + dx * 0.15,
-             y: prevState.avoidPos.y + dy * 0.15
+             x: prevState.avoidPos.x + dx * 0.2, // Tighter follow
+             y: prevState.avoidPos.y + dy * 0.2
            };
         }
 
@@ -183,18 +235,16 @@ const App: React.FC = () => {
 
         // --- PHASE LOGIC (Ring Pulse) ---
         if (gameType === 'phase') {
-           // Update breathing ring
            const t = Date.now() / 1000;
-           const breathSize = 100 + Math.sin(t * 3) * 50; // Oscillate between 50 and 150 radius (100-300px width)
+           // Complex pulse: Sine wave + slight noise
+           const breathSize = 100 + Math.sin(t * 3) * 50 + Math.sin(t * 7) * 5;
            
-           // Ensure circles exist
            if (prevCircles.length === 0) {
                return [
                    { id: 'target', x: cx - 100, y: cy - 100, size: 200, dx: 0, dy: 0, color: 'bg-transparent', isTarget: false, type: 'target-ring', spawnTime: 0 },
                    { id: 'breather', x: cx - breathSize, y: cy - breathSize, size: breathSize * 2, dx: 0, dy: 0, color: 'bg-indigo-500', isTarget: true, type: 'breathing-ring', spawnTime: 0 }
                ];
            }
-           
            return prevCircles.map(c => {
                if (c.type === 'breathing-ring') {
                    return { ...c, x: cx - breathSize, y: cy - breathSize, size: breathSize * 2 };
@@ -206,33 +256,30 @@ const App: React.FC = () => {
         // --- ORBIT LOGIC (Player & Obstacles) ---
         if (gameType === 'orbit') {
             const currentAngle = orbitAngleRef.current;
-            const currentRadius = orbitRadiusRef.current;
             
-            // Render Player Satellite
-            const playerRadius = currentRadius === 0 ? 80 : 160;
-            const px = cx + Math.cos(currentAngle) * playerRadius;
-            const py = cy + Math.sin(currentAngle) * playerRadius;
+            // Render Player Satellite using INERTIA ref for smooth lane changing
+            const radiusValue = 80 + (orbitInertiaRef.current * 80); // 80 (inner) -> 160 (outer)
+            const px = cx + Math.cos(currentAngle) * radiusValue;
+            const py = cy + Math.sin(currentAngle) * radiusValue;
             
             // Collision Detection
             const collision = prevCircles.find(c => {
-                const dist = Math.hypot(c.x - (px - 10), c.y - (py - 10)); // Adjust for center offset
-                return c.type === 'obstacle' && dist < 40;
+                const dist = Math.hypot(c.x - (px - 10), c.y - (py - 10)); 
+                return c.type === 'obstacle' && dist < 35; // Tighter hitbox
             });
 
             if (collision) {
                audioService.playTargetMiss();
-               // Penalty handled via setGameState side effect
                setGameState(gs => ({
                    ...gs,
                    score: Math.max(0, gs.score - 5),
-                   message: "IMPACT DETECTED"
+                   message: "HULL BREACH"
                }));
             }
 
-            // Update Obstacles
             const updatedCircles = prevCircles.filter(c => c.type !== 'player').map(c => {
                 if (c.type === 'obstacle') {
-                    const angle = (c.angle || 0) - 0.02; // Counter rotate
+                    const angle = (c.angle || 0) - 0.025; 
                     const ox = cx + Math.cos(angle) * (c.orbitDistance || 120);
                     const oy = cy + Math.sin(angle) * (c.orbitDistance || 120);
                     return { ...c, angle, x: ox - 10, y: oy - 10 };
@@ -240,7 +287,6 @@ const App: React.FC = () => {
                 return c;
             });
 
-            // Re-inject player
             return [
                 ...updatedCircles,
                 { id: 'player', x: px - 15, y: py - 15, size: 30, dx: 0, dy: 0, color: 'bg-indigo-500', isTarget: true, type: 'player', spawnTime: 0 }
@@ -252,27 +298,17 @@ const App: React.FC = () => {
             let newX = c.x + c.dx;
             let newY = c.y + c.dy;
 
-            // GATHER: Entropy logic
-            if (gameType === 'gather') {
-                // Particles drift away
-                if (c.type === 'particle') {
-                    const dist = Math.hypot(newX - cx, newY - cy);
-                    if (dist > Math.min(window.innerWidth, window.innerHeight)/2 + 50) {
-                        // Escaped
-                        setGameState(gs => ({...gs, score: Math.max(0, gs.score - 5), message: "ENTROPY LEAK"}));
-                        return { ...c, x: -9999 }; // Mark for deletion
-                    }
-                }
-            }
-            
-            // FLUX: Move towards center
+            // FLUX: Dynamic Acceleration
             if (gameType === 'flux' && c.type === 'particle') {
                 const angle = Math.atan2(cy - c.y, cx - c.x);
-                newX += Math.cos(angle) * 3; // Constant speed inward
-                newY += Math.sin(angle) * 3;
+                // Particles get faster as they get closer (Gravity effect)
+                const distToCenter = Math.hypot(cx - c.x, cy - c.y);
+                const speed = 2 + (200 / (distToCenter + 10)); 
                 
-                // Core Collision
-                if (Math.hypot(newX - cx, newY - cy) < 40) {
+                newX += Math.cos(angle) * speed;
+                newY += Math.sin(angle) * speed;
+                
+                if (distToCenter < 40) {
                     setGameState(gs => {
                         const match = (c.color === 'bg-white' && gs.fluxPolarity === 'white') ||
                                       (c.color === 'bg-rose-500' && gs.fluxPolarity === 'red');
@@ -288,21 +324,23 @@ const App: React.FC = () => {
                 }
             }
 
-            // BREATH: Gates move down
+            // GATHER: Entropy drift
+            if (gameType === 'gather' && c.type === 'particle') {
+                 // Particles gently wiggle
+                 c.dx += (Math.random() - 0.5) * 0.1;
+                 c.dy += (Math.random() - 0.5) * 0.1;
+                 
+                 const dist = Math.hypot(newX - cx, newY - cy);
+                 if (dist > Math.min(window.innerWidth, window.innerHeight)/2 + 50) {
+                     setGameState(gs => ({...gs, score: Math.max(0, gs.score - 5), message: "ENTROPY LEAK"}));
+                     return { ...c, x: -9999 }; 
+                 }
+            }
+
+            // BREATH: Gates
             if (gameType === 'breath' && c.type === 'gate') {
                 setGameState(gs => {
-                    // Collision check
                     const pRadius = gs.breathSize / 2;
-                    // Simplified AABB vs Circle check
-                    // Gate is a block at c.x, c.y with width c.size, height 20
-                    // Gap in gate? No, assume gate is the obstacle.
-                    // Actually, let's make gates "Safe Zones" or obstacles?
-                    // Spec: "Pass through moving gates that require specific sizes."
-                    // Implementation: Two blocks with a gap.
-                    
-                    // Let's implement obstacles (walls) moving down. Player is center.
-                    // If circle overlaps obstacle, fail.
-                    
                     const pLeft = cx - pRadius;
                     const pRight = cx + pRadius;
                     const pTop = cy - pRadius;
@@ -323,20 +361,20 @@ const App: React.FC = () => {
                 });
             }
 
-            // AVOID: Enemies chase player
+            // AVOID: Swarm
             if (gameType === 'avoid' && c.type === 'enemy') {
                 setGameState(gs => {
                     const angle = Math.atan2(gs.avoidPos.y - c.y, gs.avoidPos.x - c.x);
-                    c.dx = Math.cos(angle) * (currentRules.minSpeed * 1.5);
-                    c.dy = Math.sin(angle) * (currentRules.minSpeed * 1.5);
+                    // Swarming behavior: slight randomness
+                    c.dx = Math.cos(angle) * (currentRules.minSpeed * 1.5) + (Math.random() - 0.5);
+                    c.dy = Math.sin(angle) * (currentRules.minSpeed * 1.5) + (Math.random() - 0.5);
                     
-                    // Collision
                     const dist = Math.hypot(c.x - gs.avoidPos.x, c.y - gs.avoidPos.y);
-                    if (dist < 40) { // Player size approx 40
+                    if (dist < 40) { 
                          audioService.playTargetMiss();
-                         return { ...gs, score: Math.max(0, gs.score - 2), message: "DAMAGE" };
+                         return { ...gs, score: Math.max(0, gs.score - 2), message: "CRITICAL DAMAGE" };
                     }
-                    return { ...gs, score: gs.score + 0.05 }; // Survival points
+                    return { ...gs, score: gs.score + 0.05 }; 
                 });
                 newX = c.x + c.dx;
                 newY = c.y + c.dy;
@@ -346,7 +384,7 @@ const App: React.FC = () => {
         }).filter(c => c.x > -200 && c.x < window.innerWidth + 200 && c.y > -200 && c.y < window.innerHeight + 200);
 
       });
-    }, 16); // 60 FPS
+    }, 16); 
 
     // 3. Spawning Loop
     spawnIntervalRef.current = window.setInterval(() => {
@@ -358,10 +396,9 @@ const App: React.FC = () => {
         const cy = window.innerHeight / 2;
 
         if (gameType === 'orbit') {
-            // Spawn Obstacles
             return [...prev, {
                 id,
-                x: 0, y: 0, // Managed by angle
+                x: 0, y: 0, 
                 size: 20,
                 dx: 0, dy: 0,
                 color: 'bg-rose-500',
@@ -374,7 +411,6 @@ const App: React.FC = () => {
         }
 
         if (gameType === 'gather') {
-            // Spawn expanding particles from center
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 2 + 1;
             return [...prev, {
@@ -391,7 +427,6 @@ const App: React.FC = () => {
         }
         
         if (gameType === 'flux') {
-            // Spawn from edges towards center
             const angle = Math.random() * Math.PI * 2;
             const dist = Math.max(window.innerWidth, window.innerHeight) / 2 + 50;
             const isRed = Math.random() > 0.5;
@@ -400,7 +435,7 @@ const App: React.FC = () => {
                 x: cx + Math.cos(angle) * dist,
                 y: cy + Math.sin(angle) * dist,
                 size: 25,
-                dx: 0, dy: 0, // Handled in physics loop
+                dx: 0, dy: 0, 
                 color: isRed ? 'bg-rose-500' : 'bg-white',
                 isTarget: false,
                 type: 'particle',
@@ -409,36 +444,14 @@ const App: React.FC = () => {
         }
 
         if (gameType === 'breath') {
-            // Spawn horizontal bars (gates) moving down
-            // Gap logic: wall on left, wall on right, gap in middle
             const gapWidth = 100 + Math.random() * 100;
             const gapX = Math.random() * (window.innerWidth - gapWidth);
-            
-            const wallLeft = {
-                id: id + '-l',
-                x: 0, y: -50,
-                size: gapX, // width
-                dx: 0, dy: 2,
-                color: 'bg-gray-700',
-                isTarget: false,
-                type: 'gate',
-                spawnTime: Date.now()
-            };
-            const wallRight = {
-                id: id + '-r',
-                x: gapX + gapWidth, y: -50,
-                size: window.innerWidth - (gapX + gapWidth),
-                dx: 0, dy: 2,
-                color: 'bg-gray-700',
-                isTarget: false,
-                type: 'gate',
-                spawnTime: Date.now()
-            };
+            const wallLeft = { id: id + '-l', x: 0, y: -50, size: gapX, dx: 0, dy: 3, color: 'bg-gray-700', isTarget: false, type: 'gate', spawnTime: Date.now() };
+            const wallRight = { id: id + '-r', x: gapX + gapWidth, y: -50, size: window.innerWidth - (gapX + gapWidth), dx: 0, dy: 3, color: 'bg-gray-700', isTarget: false, type: 'gate', spawnTime: Date.now() };
             return [...prev, wallLeft as CircleData, wallRight as CircleData];
         }
 
         if (gameType === 'avoid') {
-            // Spawn enemies at edges
             const angle = Math.random() * Math.PI * 2;
             const dist = Math.max(window.innerWidth, window.innerHeight) / 2 + 50;
             return [...prev, {
@@ -446,7 +459,7 @@ const App: React.FC = () => {
                 x: cx + Math.cos(angle) * dist,
                 y: cy + Math.sin(angle) * dist,
                 size: 15,
-                dx: 0, dy: 0, // AI in physics
+                dx: 0, dy: 0, 
                 color: 'bg-rose-600',
                 isTarget: false,
                 type: 'enemy',
@@ -458,7 +471,7 @@ const App: React.FC = () => {
       });
     }, currentRules.spawnInterval);
 
-  }, [currentRules]); // Removed heavy dependency arrays to prevent stutter
+  }, [currentRules, triggerSilentRuleShift]); 
 
   const endGame = useCallback(() => {
     setGameState(prev => {
@@ -482,7 +495,6 @@ const App: React.FC = () => {
   const handleGlobalClick = () => {
       if (!gameState.isRunning) return;
       
-      // FLUX: Toggle Polarity
       if (gameState.activeGame === 'flux') {
           setGameState(gs => ({
               ...gs,
@@ -491,27 +503,20 @@ const App: React.FC = () => {
           audioService.playClick();
       }
       
-      // ORBIT: Switch Track
       if (gameState.activeGame === 'orbit') {
           setGameState(gs => {
               const newRadius = gs.orbitRadius === 0 ? 1 : 0;
-              orbitRadiusRef.current = newRadius;
-              return {
-                  ...gs,
-                  orbitRadius: newRadius
-              };
+              return { ...gs, orbitRadius: newRadius };
           });
           audioService.playClick();
       }
 
-      // PHASE: Check Rhythm
       if (gameState.activeGame === 'phase') {
-          // Check difference between breathing ring size and target size
-          const targetSize = 200; // Fixed diameter
+          const targetSize = 200; 
           const currentSize = circles.find(c => c.type === 'breathing-ring')?.size || 0;
           const diff = Math.abs(currentSize - targetSize);
           
-          if (diff < 30) { // Tolerance
+          if (diff < 40) { 
               audioService.playTargetHit();
               setGameState(gs => ({ ...gs, score: gs.score + 25, message: "SYNC PERFECT" }));
           } else {
@@ -524,17 +529,15 @@ const App: React.FC = () => {
   const handleCircleClick = (id: string, isTarget: boolean, type?: string) => {
     if (!gameState.isRunning) return;
     
-    // GATHER: Tap particles to return them to center
     if (gameState.activeGame === 'gather' && type === 'particle') {
         setCircles(prev => prev.map(c => {
             if (c.id === id) {
-                // Reverse velocity towards center
                 const angle = Math.atan2(window.innerHeight/2 - c.y, window.innerWidth/2 - c.x);
                 return { 
                     ...c, 
                     dx: Math.cos(angle) * 3, 
                     dy: Math.sin(angle) * 3,
-                    color: 'bg-indigo-500' // Visual feedback
+                    color: 'bg-indigo-500' 
                 };
             }
             return c;
@@ -566,10 +569,18 @@ const App: React.FC = () => {
       onTouchEnd={handleMouseUp}
       onClick={handleGlobalClick}
     >
-      {!gameState.activeGame && !gameState.isRunning ? (
+      {!gameState.activeGame ? (
         <GameSelector onSelect={selectGame} appConfig={appConfig} />
       ) : (
         <>
+          <ControlPanel
+            gameState={gameState}
+            currentRules={currentRules}
+            onStartGame={() => startGame(gameState.activeGame || 'orbit')}
+            onEndGame={endGame}
+            onHome={goHome}
+          />
+
           <GameArea
             circles={circles}
             activeGame={gameState.activeGame}
@@ -578,7 +589,6 @@ const App: React.FC = () => {
             onMissClick={() => {}}
           />
 
-          {/* FLUX Core Visualization */}
           {gameState.activeGame === 'flux' && (
               <div 
                 className={`absolute pointer-events-none transition-colors duration-200 rounded-full blur-md z-0`}
@@ -590,7 +600,6 @@ const App: React.FC = () => {
               />
           )}
 
-          {/* AVOID Player Visualization (if using state pos instead of circle array) */}
           {gameState.activeGame === 'avoid' && (
                <div 
                className="absolute w-8 h-8 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] z-30 pointer-events-none transition-transform duration-75"
@@ -601,7 +610,6 @@ const App: React.FC = () => {
              />
           )}
 
-          {/* BREATH Player Visualization */}
           {gameState.activeGame === 'breath' && (
                <div 
                className="absolute rounded-full border-4 border-white z-30 pointer-events-none"
@@ -614,17 +622,9 @@ const App: React.FC = () => {
                }}
              />
           )}
-
-          <ControlPanel
-            gameState={gameState}
-            currentRules={currentRules}
-            onStartGame={() => startGame(gameState.activeGame || 'orbit')}
-            onEndGame={endGame}
-          />
         </>
       )}
 
-      {/* Ad Overlay Simulation */}
       {activeAd && (
         <AdOverlay 
           type={activeAd} 
@@ -645,7 +645,7 @@ const App: React.FC = () => {
           <div className="mt-10 pt-4 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-mono">
             <span className="uppercase tracking-[0.2em]">ENG: maaZone S6</span>
             <button 
-              onClick={() => { closeModal(); setGameState(INITIAL_GAME_STATE); }}
+              onClick={() => { closeModal(); goHome(); }}
               className="px-8 py-3 bg-indigo-600 text-white rounded-full font-black text-xs hover:bg-black transition-all shadow-xl active:scale-95"
             >
               RESET VOID
@@ -656,7 +656,7 @@ const App: React.FC = () => {
 
       <BrandingFooter 
         onAdminAccessAttempt={() => setShowAdminPanel(true)} 
-        appVersion="v2.0.0" 
+        appVersion="v2.1" 
       />
 
       {showAdminPanel && (
