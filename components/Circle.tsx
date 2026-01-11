@@ -22,85 +22,82 @@ const Circle: React.FC<CircleProps> = ({ circle, activeGame, variation, onClick 
       transform: `scale(${scale})`,
     };
 
-    // Variation-specific visual overrides
-    if (activeGame === 'shift' && variation === 'shape-morph') {
-      const morph = (Math.sin(Date.now() / 300) + 1) / 2; // 0 to 1
-      baseStyle.borderRadius = `${morph * 50}%`; // Oscillate between square and circle
+    // Game Specific Overrides
+    if (activeGame === 'orbit') {
+      return {
+        ...baseStyle,
+        borderRadius: '50%',
+        boxShadow: type === 'player' ? '0 0 15px rgba(99, 102, 241, 0.8)' : 'none',
+      };
+    }
+    
+    if (activeGame === 'flux') {
+      return {
+        ...baseStyle,
+        borderRadius: '50%',
+        boxShadow: type === 'player' ? `0 0 40px ${color === 'bg-white' ? 'rgba(255,255,255,0.4)' : 'rgba(244,63,94,0.4)'}` : 'none',
+        transition: 'background-color 0.3s ease',
+      };
     }
 
-    switch (activeGame) {
-      case 'delay':
+    if (activeGame === 'breath') {
+      if (type === 'gate') {
         return {
           ...baseStyle,
-          borderRadius: '50%',
-          boxShadow: isTarget ? '0 0 30px rgba(99, 102, 241, 0.3)' : 'none',
-          border: '1px solid rgba(255,255,255,0.05)',
+          borderRadius: '4px',
+          width: `${size}px`, // Gates are actually rectangular in logic, but rendered as circles/blocks
+          height: '20px', 
         };
-      case 'shift':
-        return {
-          ...baseStyle,
-          borderRadius: baseStyle.borderRadius || (isTarget ? '50%' : '2px'),
-          rotate: isTarget ? '0deg' : '45deg',
-        };
-      case 'echo':
-        return {
-          ...baseStyle,
-          borderRadius: '50%',
-          border: type === 'echo' ? '2px dashed rgba(165, 180, 252, 0.4)' : '1px solid white',
-        };
-      case 'weight':
-        return {
-          ...baseStyle,
-          borderRadius: '45% 55% 60% 40% / 50% 50% 50% 50%',
-          filter: 'blur(0.5px)',
-        };
-      case 'blind':
-        return {
-          ...baseStyle,
-          borderRadius: '50%',
-        };
-      case 'choice':
-        return {
-          ...baseStyle,
-          borderRadius: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '1.5rem',
-          fontWeight: '800',
-        };
-      default:
-        return baseStyle;
+      }
     }
-  }, [x, y, size, opacity, scale, activeGame, variation, isTarget, type]);
+    
+    if (activeGame === 'phase') {
+        if (type === 'target-ring') {
+            return {
+                ...baseStyle,
+                background: 'transparent',
+                border: '2px solid rgba(255,255,255,0.2)',
+                borderRadius: '50%'
+            };
+        }
+        if (type === 'breathing-ring') {
+            return {
+                ...baseStyle,
+                background: 'transparent',
+                border: '4px solid #6366f1',
+                borderRadius: '50%',
+                boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)'
+            };
+        }
+    }
 
-  const getAnimationClass = () => {
-    if (activeGame === 'delay' && variation === 'ghost-pulse') return ''; // Handled by inline opacity
-    if (activeGame === 'delay') return 'animate-pulse';
-    if (activeGame === 'echo' && type === 'echo') return 'animate-ping';
-    return '';
-  };
+    // Default Fallback
+    return {
+      ...baseStyle,
+      borderRadius: '50%',
+    };
+
+  }, [x, y, size, opacity, scale, activeGame, variation, isTarget, type, color]);
 
   return (
     <div
-      className={`absolute cursor-pointer transition-all duration-300 ease-out flex items-center justify-center
+      className={`absolute cursor-pointer transition-transform duration-75 ease-linear flex items-center justify-center
         ${color}
-        ${isTarget ? 'shadow-2xl' : 'opacity-10'}
-        ${getAnimationClass()}
+        ${type === 'player' ? 'z-20' : 'z-10'}
+        ${activeGame === 'gather' && type === 'particle' ? 'hover:scale-110 active:scale-90' : ''}
       `}
       style={dynamicStyle}
       onClick={(e) => {
-        e.stopPropagation();
-        onClick(id, isTarget, type);
+        // Only propagate clicks for interactive elements
+        if (activeGame === 'gather' || activeGame === 'flux') {
+           e.stopPropagation();
+           onClick(id, isTarget, type);
+        }
       }}
     >
-      {activeGame === 'choice' && (
-        <span className="text-white/80 select-none">
-          {type === 'choice-left' ? 'ALPHA' : 'BETA'}
-        </span>
-      )}
-      {activeGame === 'delay' && isTarget && (
-        <div className="absolute inset-0 rounded-full border border-white/10 animate-ping opacity-10" />
+      {/* Visual flourishes */}
+      {activeGame === 'avoid' && type === 'player' && (
+        <div className="absolute inset-0 border border-indigo-400 rounded-full animate-ping opacity-20" />
       )}
     </div>
   );

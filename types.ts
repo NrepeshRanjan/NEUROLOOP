@@ -1,7 +1,7 @@
 
 import { AuthSession } from '@supabase/supabase-js';
 
-export type GameType = 'delay' | 'shift' | 'echo' | 'weight' | 'blind' | 'choice';
+export type GameType = 'orbit' | 'phase' | 'flux' | 'gather' | 'avoid' | 'breath';
 
 export interface GameState {
   isRunning: boolean;
@@ -17,12 +17,19 @@ export interface GameState {
   ruleShiftsApplied: number;
   message: string;
   // Specific game state data
+  orbitAngle: number;
+  orbitRadius: number; // For ORBIT: 0 = inner, 1 = outer
+  fluxPolarity: 'white' | 'red'; // For FLUX
+  breathSize: number; // For BREATH
+  avoidPos: { x: number, y: number }; // For AVOID (Player pos)
+  
+  // Legacy/Shared
   echoBuffer: Array<{ x: number, y: number, timestamp: number, type: string }>;
   weightPos: { x: number, y: number, velocityX: number, velocityY: number };
   blindMaskPos: { x: number, y: number };
-  isLogicInverted: boolean; // For SHIFT ghost-rule
-  lastChoiceTime: number; // For CHOICE
-  patienceFactor: number; // For DELAY
+  isLogicInverted: boolean; 
+  lastChoiceTime: number; 
+  patienceFactor: number; 
 }
 
 export interface GameRule {
@@ -34,7 +41,7 @@ export interface GameRule {
   spawnInterval: number; 
   maxCirclesOnScreen: number;
   clickAccuracyThreshold: number;
-  variation: string; // Specific variation from spec
+  variation: string; 
 }
 
 export interface CircleData {
@@ -45,11 +52,14 @@ export interface CircleData {
   dx: number; 
   dy: number; 
   color: string; 
-  isTarget: boolean;
-  type?: 'echo' | 'phantom' | 'standard' | 'choice-left' | 'choice-right';
+  isTarget: boolean; // In new games, this often means "Player" or "Enemy"
+  type?: 'player' | 'enemy' | 'obstacle' | 'gate' | 'particle' | 'target-ring' | 'breathing-ring';
   opacity?: number;
   scale?: number;
   spawnTime: number;
+  // Specific physics
+  angle?: number; // For Orbit obstacles
+  orbitDistance?: number;
 }
 
 export interface Admin {
