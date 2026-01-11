@@ -37,19 +37,26 @@ const BrandingFooter: React.FC<BrandingFooterProps> = ({ onAdminAccessAttempt, a
   }, []);
 
   return (
-    <footer className="absolute bottom-0 left-0 right-0 p-4 pb-6 pt-12 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col items-center justify-center text-gray-600 text-[10px] uppercase tracking-widest z-20 pointer-events-none">
-      <div className="pointer-events-auto text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
-        <p>NEUROLOOP ENGINE</p>
-        <p className="mt-1">
-          BUILD:{" "}
-          <span
-            className="cursor-pointer hover:text-white transition-colors select-none font-bold"
-            onClick={handleVersionClick}
-            role="button"
-          >
-            {appVersion}
-          </span>
-        </p>
+    <footer className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex flex-col items-center justify-end">
+      {/* Visual Separator */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-indigo-900/50 to-transparent mb-0" />
+      
+      {/* Content Area */}
+      <div className="w-full bg-[#050505]/95 backdrop-blur-md pb-6 pt-4 flex flex-col items-center justify-center text-[10px] uppercase tracking-widest shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+        <div className="pointer-events-auto text-center group cursor-default transition-all duration-300 hover:scale-105">
+           <p className="text-[10px] text-indigo-400 font-bold mb-1 tracking-[0.2em] flex items-center justify-center gap-2">
+             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+             POWERED BY <span className="text-white font-black">maaZone</span>
+           </p>
+           <p className="text-[8px] text-gray-700 font-mono">
+             NEUROLOOP ENGINE <span 
+               className="cursor-pointer hover:text-indigo-500 transition-colors text-gray-600" 
+               onClick={handleVersionClick}
+             >
+               {appVersion}
+             </span>
+           </p>
+        </div>
       </div>
     </footer>
   );
