@@ -19,17 +19,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 }) => {
   const { isRunning, score, accuracy, gameTime, message } = gameState;
   const [isMuted, setIsMuted] = useState(audioService.getMuted());
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    const handleStatusChange = () => setIsOnline(navigator.onLine);
-    window.addEventListener('online', handleStatusChange);
-    window.addEventListener('offline', handleStatusChange);
-    return () => {
-      window.removeEventListener('online', handleStatusChange);
-      window.removeEventListener('offline', handleStatusChange);
-    };
-  }, []);
 
   const toggleSound = () => {
     const muted = audioService.toggleMute();
@@ -44,7 +33,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <>
-      {/* TOP LEFT: Control Group (Home, Back, Sound) */}
+      {/* TOP LEFT: Navigation Group (Home, Back) */}
       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50 flex flex-row gap-3 md:gap-4 items-start">
          {/* Home Button */}
          <button 
@@ -56,16 +45,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-          </button>
-
-          {/* Sound Toggle */}
-          <button 
-            onClick={toggleSound}
-            className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gray-900/90 border-2 transition-all shadow-lg active:scale-90 backdrop-blur-sm group ${isMuted ? 'border-red-500/50 text-red-400' : 'border-indigo-500/50 text-indigo-400'}`}
-             aria-label={isMuted ? "Unmute" : "Mute"}
-             style={{ touchAction: 'manipulation' }}
-          >
-             <span className="text-xl group-hover:scale-110 transition-transform">{isMuted ? '🔇' : '🔊'}</span>
           </button>
 
           {/* Back/End Game Button */}
@@ -83,17 +62,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           )}
       </div>
 
-      {/* TOP RIGHT: Branding & Status (Compact) */}
-      <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50 pointer-events-none select-none text-right flex flex-col items-end opacity-60 hover:opacity-100 transition-opacity duration-300">
-          <h1 className="text-xl md:text-2xl font-black tracking-tighter text-indigo-500 drop-shadow-[0_0_10px_rgba(99,102,241,0.4)] italic leading-none">
-            NEUROLOOP
-          </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
-            <p className="text-[8px] md:text-[10px] text-gray-400 font-mono tracking-widest uppercase">
-              {isOnline ? 'ONLINE' : 'OFFLINE'}
-            </p>
-          </div>
+      {/* TOP RIGHT: Sound Toggle */}
+      <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50">
+          <button 
+            onClick={toggleSound}
+            className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gray-900/90 border-2 transition-all shadow-lg active:scale-90 backdrop-blur-sm group ${isMuted ? 'border-red-500/50 text-red-400' : 'border-indigo-500/50 text-indigo-400'}`}
+             aria-label={isMuted ? "Unmute" : "Mute"}
+             style={{ touchAction: 'manipulation' }}
+          >
+             <span className="text-xl group-hover:scale-110 transition-transform">{isMuted ? '🔇' : '🔊'}</span>
+          </button>
       </div>
 
       {/* TOP CENTER: Score & Status (Only if running) */}

@@ -38,10 +38,24 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none pb-32 pt-24 px-4">
+    <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none pb-32 pt-28 px-4">
        
-       {/* Sound Toggle - Moved to Fixed Top Left */}
-       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50">
+       {/* Branding - Fixed Top Left */}
+       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50 pointer-events-none select-none text-left flex flex-col items-start">
+          <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-indigo-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.4)] italic leading-none">
+            NEUROLOOP
+          </h1>
+          <div className="h-0.5 w-full bg-gradient-to-r from-indigo-600 to-transparent mt-1 mb-1 opacity-50" />
+          <div className="flex items-center gap-2">
+            <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isOnline ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500 shadow-[0_0_5px_#ef4444]'} animate-pulse`} />
+            <p className="text-[9px] md:text-xs text-gray-400 font-mono tracking-widest uppercase opacity-80">
+              {isOnline ? 'ONLINE' : 'OFFLINE'}
+            </p>
+          </div>
+       </div>
+
+       {/* Sound Toggle - Fixed Top Right */}
+       <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50">
           <button 
             onClick={toggleSound}
             className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-90 backdrop-blur-sm border-2 ${isMuted ? 'bg-red-900/80 text-red-400 border-red-500/50' : 'bg-indigo-900/80 text-indigo-400 border-indigo-500/50'}`}
@@ -50,20 +64,6 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
           >
              <span className="text-2xl">{isMuted ? '🔇' : '🔊'}</span>
           </button>
-       </div>
-
-       {/* Branding - Moved to Fixed Top Right */}
-       <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50 pointer-events-none select-none text-right flex flex-col items-end">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-indigo-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.4)] italic leading-none">
-            NEUROLOOP
-          </h1>
-          <div className="h-0.5 w-full bg-gradient-to-l from-indigo-600 to-transparent mt-1 mb-1 opacity-50" />
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-red-500 shadow-[0_0_5px_#ef4444]'} animate-pulse`} />
-            <p className="text-[10px] md:text-xs text-gray-400 font-mono tracking-widest uppercase opacity-80">
-              {isOnline ? 'ONLINE' : 'OFFLINE'}
-            </p>
-          </div>
        </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 w-full max-w-2xl">
