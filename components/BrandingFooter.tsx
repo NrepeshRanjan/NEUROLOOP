@@ -37,7 +37,7 @@ const BrandingFooter: React.FC<BrandingFooterProps> = ({ onAdminAccessAttempt, a
   }, []);
 
   return (
-    <footer className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center justify-center text-gray-600 text-[10px] uppercase tracking-widest z-20 pointer-events-none">
+    <footer className="absolute bottom-0 left-0 right-0 p-4 pb-6 pt-12 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col items-center justify-center text-gray-600 text-[10px] uppercase tracking-widest z-20 pointer-events-none">
       <div className="pointer-events-auto text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
         <p>NEUROLOOP ENGINE</p>
         <p className="mt-1">

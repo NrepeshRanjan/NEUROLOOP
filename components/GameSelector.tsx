@@ -27,12 +27,12 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none">
+    <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none pb-24">
        {/* Sound Toggle - Fixed Top Right */}
        <div className="fixed top-4 right-4 z-50">
           <button 
             onClick={toggleSound}
-            className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-95 ${isMuted ? 'bg-red-900/80 text-red-400 border border-red-500' : 'bg-indigo-900/80 text-indigo-400 border border-indigo-500'}`}
+            className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg active:scale-95 backdrop-blur-sm border ${isMuted ? 'bg-red-900/80 text-red-400 border-red-500' : 'bg-indigo-900/80 text-indigo-400 border-indigo-500'}`}
           >
              {isMuted ? '🔇' : '🔊'}
           </button>
