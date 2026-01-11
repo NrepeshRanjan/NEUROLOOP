@@ -1,0 +1,14 @@
+ENGINE_CONFIG:
+  version: v1.0
+
+  autonomy:
+    level: high
+    requires_user_approval_for:
+      - new_status_file
+      - file_deletion
+
+  documentation:
+    root: /dev-docs
+    history_lock: strict
+
+  verbosity: high

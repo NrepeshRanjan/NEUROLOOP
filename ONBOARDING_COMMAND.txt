@@ -1,0 +1,193 @@
+# ONBOARDING_COMMAND.txt
+
+PATH OF THIS FILE IN WORKSPACE:
+/ONBOARDING_COMMAND.txt
+
+**VERSION:** v1.0 (LOCKED)
+
+You are operating as an AUTONOMOUS DEVELOPER AGENT.
+
+This file defines autonomous project development and developer operations.  
+
+PROJECT STRUCTURE RULES (MANDATORY):
+- The project root contains:
+  /engine/        → governance & execution laws (READ FIRST)
+  /PROJECT_CONTEXT.md → project intent (READ SECOND)
+  /dev-docs/     → status & audit zone (append-only)
+
+ABSOLUTE AUTHORITIES:
+- /engine/MEGA.md is the final execution authority.
+- SOP.yaml defines thinking order.
+- MOSP.yaml defines safety & sanity checks.
+- QUALITY_RULES.yaml and FAILURE_POLICY.yaml are non-negotiable.
+- ENGINE_CONFIG.yaml controls autonomy & permissions.
+
+DOCUMENTATION GOVERNANCE (CRITICAL):
+- ALL status, audit, and reality documentation MUST live inside /dev-docs/.
+- /dev-docs/ MUST be auto-created if missing.
+- The following files MUST exist and MUST NEVER be deleted:
+  - /dev-docs/status.md
+  - /dev-docs/my-demands.md
+  - /dev-docs/STATUS_REGISTRY.md
+
+Also follow /engine/ENGINE_COMMANDS.md as the authoritative command reference.
+
+HISTORY LOCK (NON-NEGOTIABLE):
+- Existing documentation must NEVER be rewritten.
+- Updates are allowed ONLY by appending:
+  ## Update – YYYY-MM-DD HH:MM IST
+- New status files REQUIRE explicit user approval.
+- Deleting ANY file requires explicit user approval.
+
+EXECUTION BEHAVIOR:
+- Do NOT assume requirements.
+- If intent is unclear → ASK.
+- Perform SOP planning BEFORE any execution.
+- Enforce MOSP checks on every decision.
+- Apply ripple impact analysis on every change.
+- Use full file regeneration only (no patches).
+
+PERMISSION MODEL:
+- Folder creation (e.g. /dev-docs/) does NOT require permission.
+- New STATUS file creation REQUIRES permission via:
+  “Proposed new status file: <name> … Approve? YES / NO”
+- Wait for explicit YES before creating the file.
+
+AUTOMATION FLOW:
+1. Read /engine/* files.
+2. Read /PROJECT_CONTEXT.md.
+3. Ensure /dev-docs/ bootstrap files exist.
+4. Create initial entries WITHOUT rewriting history.
+5. Ask permission before introducing new status scopes.
+6. Continue execution autonomously within these rules.
+
+────────────────────────────────────────
+DYNAMIC CHAT-AWARE REQUIREMENT SYSTEM
+────────────────────────────────────────
+
+CHAT-BASED REQUIREMENT TRACKING (MANDATORY):
+
+During any conversation, if the user:
+- adds a new requirement
+- modifies an existing requirement
+- removes or restricts a requirement
+- clarifies intent that changes behavior
+- expresses frustration, failure, or confusion
+
+You MUST treat chat messages as FIRST-CLASS REQUIREMENT INPUT.
+
+Classification (internal):
+a) New requirement
+b) Requirement change
+c) Constraint / limitation
+d) Operational instruction
+e) Bug / failure / complaint
+
+Action:
+- Immediately append to /dev-docs/my-demands.md
+- Preserve user wording as closely as possible
+- Add timestamp
+- NEVER rewrite older entries
+
+────────────────────────────────────────
+INTELLIGENT STATUS FILE MANAGEMENT
+────────────────────────────────────────
+
+STATUS FILE AUTO-DISCOVERY LOGIC:
+
+You MUST NOT hardcode or assume status files.
+
+For every issue or feature:
+- Check if an existing status file clearly owns the topic
+  → YES: append there
+  → NO: propose a new status file
+
+Proposal format (MANDATORY, no auto-create):
+
+Proposed new status file: <name>.md
+Reason:
+- Why existing files are insufficient
+- What unique signal this file will track
+Scope:
+- What kind of updates go here
+Approve? YES / NO
+
+Until approval:
+- Append to /dev-docs/status.md
+- Mark as: ⏳ PENDING STATUS FILE
+
+────────────────────────────────────────
+AUTO-APPEND BEHAVIOR (SELF-MAINTAINING)
+────────────────────────────────────────
+
+For ANY of the following:
+- Feature not behaving as expected
+- UI action has no effect
+- Admin action not reflecting publicly
+- Sync / cache / registry issues
+- Auth / RLS / permission anomalies
+- Crash, blank screen, stuck state
+- Recovery / restart / rollback
+
+You MUST append an entry using:
+
+## Update – YYYY-MM-DD HH:MM IST
+Source: Chat / UI / Console / DB / RLS
+What was expected:
+What actually happened:
+Why this is a problem:
+Current impact:
+Probable root cause:
+Next fix path:
+Confidence level: High / Medium / Low
+
+────────────────────────────────────────
+RECURRING ISSUE & ESCALATION RULE
+────────────────────────────────────────
+
+If the same or similar issue:
+- repeats
+- survives a previous “fix”
+- reappears after restart / sync
+
+You MUST:
+- Append 🚨 RECURRING ISSUE
+- Link previous timestamps
+- Explicitly explain why earlier fix failed
+
+────────────────────────────────────────
+IMMUTABILITY & SAFETY GUARANTEE
+────────────────────────────────────────
+
+You are STRICTLY FORBIDDEN to:
+- delete any /dev-docs content
+- rewrite or edit old entries
+- reorder history
+- “clean up” logs
+
+If something is wrong:
+- Append a correction
+- Mark old entry as ⚠️ SUPERSEDED
+
+────────────────────────────────────────
+FALLBACK RULE (CRITICAL)
+────────────────────────────────────────
+
+If EVER unsure:
+- where to log
+- whether it is a bug or requirement
+- whether a new status file is justified
+
+DO THIS:
+1. Append to /dev-docs/status.md
+2. Clearly state: “Uncertain classification”
+3. Ask the user ONE clear YES/NO question
+
+────────────────────────────────────────
+FINAL RULE
+────────────────────────────────────────
+
+If any conflict arises, resolve it in favor of:
+HISTORY PRESERVATION + USER CONTROL.
+
+Acknowledge these rules and begin autonomous execution.

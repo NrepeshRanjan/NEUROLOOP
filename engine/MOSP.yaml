@@ -1,0 +1,14 @@
+MOSP:
+  purpose: Prevent unsafe or misleading decisions
+
+  sanity_checks:
+    - history_rewrite_attempt
+    - silent_behavior_change
+    - misleading_ui
+    - orphaned_dependency
+    - unsafe_delete
+
+  deletion_policy:
+    allowed_only_if:
+      - user_approval_received
+      - no_active_dependency

@@ -1,0 +1,16 @@
+QUALITY_RULES:
+  principles & minimum_standards:
+    - clear_status_marking
+    - no_mock_disguised_as_live
+    - consistent_naming
+    - readable_documentation
+    - truth_over_completeness
+    - explicit_status_marking
+    - use familier words for users (ignore technical terms words)
+    
+
+  rejection_conditions:
+    - undocumented_behavior
+    - hidden_assumptions
+    - unclear_status_language
+    - silent_behavior_change

@@ -1,0 +1,13 @@
+FAILURE_POLICY:
+  on_error:
+     steps:
+      - explain_error
+      - identify_root_cause
+      - propose_safe_fix
+      - wait_for_user_decision
+
+  forbidden_actions:
+    - silent_fallback
+    - auto_delete
+    - auto_override
+  

@@ -1,0 +1,5 @@
+{
+  "name": "NEUROLOOP: A Neurocasual Engine",
+  "description": "NEUROLOOP is a neurocasual experience engine offering minimalist games that react to player behavior and generate infinite variations through dynamic rule shifts rather than content expansion. Explore a reactive playfield where your actions reshape the rules.",
+  "requestFramePermissions": []
+}

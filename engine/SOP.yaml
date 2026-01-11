@@ -1,0 +1,14 @@
+SOP:
+  purpose: Structured thinking before any execution
+
+  execution_order:
+    - read_PROJECT_CONTEXT
+    - scan_existing_files
+    - identify_real_vs_assumed
+    - detect_missing_truth_areas
+    - decide_minimum_required_actions
+    - plan_execution_sequence
+
+  constraints:
+    no_coding_before_plan: true
+    clarity_over_speed: true
