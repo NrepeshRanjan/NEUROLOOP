@@ -9,3 +9,9 @@ Current impact: Minor, as this is an initial setup step.
 Probable root cause: First-time project boot-up for the agent.
 Next fix path: File created.
 Confidence level: High
+
+## Update – 2024-07-30 18:32 IST
+Source: Chat Input
+Demand: Flesh out the specific variations for each game as described in PROJECT_CONTEXT.md.
+Details: Implement logic for 'ghost-pulse' (DELAY), 'ghost-rule' (SHIFT), 'decay-offset' (ECHO), 'peripheral-pulse' (BLIND), and 'shape-morph' (SHIFT).
+Status: In Progress.

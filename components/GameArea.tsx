@@ -6,26 +6,26 @@ import { Circle } from './Circle';
 interface GameAreaProps {
   circles: CircleData[];
   activeGame: GameType | null;
+  variation?: string;
   onCircleClick: (id: string, isTarget: boolean, type?: string) => void;
   onMissClick: () => void;
 }
 
-const GameArea: React.FC<GameAreaProps> = ({ circles, activeGame, onCircleClick, onMissClick }) => {
+const GameArea: React.FC<GameAreaProps> = ({ circles, activeGame, variation, onCircleClick, onMissClick }) => {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onMissClick();
     }
   };
 
-  // Unique background effects based on the game
   const getBackgroundOverlay = () => {
     switch (activeGame) {
       case 'weight':
-        return <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)] pointer-events-none" />;
+        return <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.5)_100%)] pointer-events-none" />;
       case 'shift':
-        return <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />;
+        return <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-linen.png')] opacity-10 pointer-events-none" />;
       case 'echo':
-        return <div className="absolute inset-0 bg-[linear-gradient(45deg,_rgba(255,255,255,0.02)_25%,_transparent_25%,_transparent_50%,_rgba(255,255,255,0.02)_50%,_rgba(255,255,255,0.02)_75%,_transparent_75%,_transparent)] bg-[length:20px_20px] pointer-events-none" />;
+        return <div className="absolute inset-0 bg-[linear-gradient(90deg,_rgba(255,255,255,0.01)_1px,_transparent_1px),_linear-gradient(rgba(255,255,255,0.01)_1px,_transparent_1px)] bg-[size:40px_40px] pointer-events-none" />;
       default:
         return null;
     }
@@ -34,7 +34,7 @@ const GameArea: React.FC<GameAreaProps> = ({ circles, activeGame, onCircleClick,
   return (
     <div
       className={`absolute inset-0 w-full h-full cursor-crosshair overflow-hidden transition-colors duration-1000 ${
-        activeGame === 'blind' ? 'bg-[#020202]' : ''
+        activeGame === 'blind' ? 'bg-[#010101]' : 'bg-[#050505]'
       }`}
       onClick={handleClick}
     >
@@ -44,6 +44,7 @@ const GameArea: React.FC<GameAreaProps> = ({ circles, activeGame, onCircleClick,
           key={circle.id} 
           circle={circle} 
           activeGame={activeGame}
+          variation={variation}
           onClick={onCircleClick} 
         />
       ))}

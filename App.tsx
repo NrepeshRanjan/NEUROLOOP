@@ -41,10 +41,10 @@ const App: React.FC = () => {
     targetColor: 'bg-indigo-500',
     minCircleSize: 40,
     maxCircleSize: 80,
-    minSpeed: 0.5,
-    maxSpeed: 2,
-    spawnInterval: 1500,
-    maxCirclesOnScreen: 5,
+    minSpeed: 0.8,
+    maxSpeed: 2.5,
+    spawnInterval: 1400,
+    maxCirclesOnScreen: 6,
     clickAccuracyThreshold: 85,
     variation: 'default',
   });
@@ -52,17 +52,15 @@ const App: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [geminiInsight, setGeminiInsight] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
 
   const gameIntervalRef = useRef<number | null>(null);
   const spawnIntervalRef = useRef<number | null>(null);
   const gameTimerRef = useRef<number | null>(null);
-  const physicsIntervalRef = useRef<number | null>(null);
   const clickTimesRef = useRef<number[]>([]);
 
   useEffect(() => {
-    fetchAppConfig().then(setAppConfig);
+    fetchAppConfig();
     const { data: authListener } = (supabase.auth as any).onAuthStateChange((_: any, s: any) => setSession(s));
     AuthService.getSession().then(setSession);
     return () => authListener?.unsubscribe();
@@ -98,16 +96,16 @@ const App: React.FC = () => {
       const newVariation = gameVariations[Math.floor(Math.random() * gameVariations.length)];
 
       if (gameType === 'shift' && newVariation === 'ghost-rule') {
-        setGameState(p => ({ ...p, isLogicInverted: !p.isLogicInverted }));
+        setGameState(p => ({ ...p, isLogicInverted: !p.isLogicInverted, message: `LOGIC ${!p.isLogicInverted ? 'INVERTED' : 'NORMALIZED'}` }));
+      } else {
+        setGameState(p => ({ ...p, message: `VAR: ${newVariation.replace('-', ' ').toUpperCase()}` }));
       }
-
-      setGameState(p => ({ ...p, message: `Variation: ${newVariation.replace('-', ' ').toUpperCase()}` }));
 
       return {
         ...prev,
         variation: newVariation,
-        spawnInterval: Math.max(600, prev.spawnInterval * 0.9),
-        maxSpeed: Math.min(6, prev.maxSpeed * 1.2)
+        spawnInterval: Math.max(500, prev.spawnInterval * 0.95),
+        maxSpeed: Math.min(8, prev.maxSpeed * 1.1)
       };
     });
   }, [gameState.activeGame]);
@@ -122,13 +120,13 @@ const App: React.FC = () => {
       ...INITIAL_GAME_STATE, 
       isRunning: true, 
       activeGame: gameType,
-      message: `ENGINE LOADED: ${gameType.toUpperCase()}` 
+      message: `INITIATING ${gameType.toUpperCase()}` 
     });
     
     setCircles([]);
     clickTimesRef.current = [];
 
-    [gameIntervalRef, spawnIntervalRef, gameTimerRef, physicsIntervalRef].forEach(ref => {
+    [gameIntervalRef, spawnIntervalRef, gameTimerRef].forEach(ref => {
       if (ref.current) clearInterval(ref.current);
     });
 
@@ -142,7 +140,7 @@ const App: React.FC = () => {
       });
     }, 1000);
 
-    // Main Logic Loop (Physics + Anim)
+    // Main Processing Loop
     gameIntervalRef.current = window.setInterval(() => {
       setCircles(prev => prev.map(c => {
         let newX = c.x + c.dx;
@@ -150,15 +148,23 @@ const App: React.FC = () => {
         let newOpacity = c.opacity || 1;
         let newScale = c.scale || 1;
 
-        // Visual Effects based on Variations
+        // Visual Variations
         if (currentRules.variation === 'ghost-pulse') {
-          newOpacity = 0.5 + Math.sin(Date.now() / 200) * 0.5;
+          newOpacity = 0.3 + Math.sin(Date.now() / 150) * 0.7;
         }
         if (currentRules.variation === 'depth-drift') {
-          newScale = 1 + Math.sin(Date.now() / 400) * 0.4;
+          newScale = 1 + Math.sin(Date.now() / 500) * 0.5;
         }
         if (currentRules.variation === 'vanishing-core') {
-          newScale = Math.max(0.1, 1 - (Date.now() - c.spawnTime) / 2000);
+          const age = Date.now() - c.spawnTime;
+          newScale = Math.max(0.1, 1.2 - (age / 1500));
+          if (newScale <= 0.1) newOpacity *= 0.8;
+        }
+
+        // BLIND: Peripheral Pulse
+        if (currentRules.variation === 'peripheral-pulse') {
+          const dist = Math.hypot(newX - gameState.blindMaskPos.x, newY - gameState.blindMaskPos.y);
+          newOpacity = Math.min(1, Math.max(0.05, dist / 400));
         }
 
         // WEIGHT repulsion
@@ -166,15 +172,15 @@ const App: React.FC = () => {
           const centerX = window.innerWidth / 2;
           const centerY = window.innerHeight / 2;
           const dist = Math.hypot(newX - centerX, newY - centerY);
-          if (dist < 300) {
+          if (dist < 250) {
              const angle = Math.atan2(newY - centerY, newX - centerX);
-             newX += Math.cos(angle) * 2;
-             newY += Math.sin(angle) * 2;
+             newX += Math.cos(angle) * 3;
+             newY += Math.sin(angle) * 3;
           }
         }
 
         return { ...c, x: newX, y: newY, opacity: newOpacity, scale: newScale };
-      }).filter(c => c.x > -200 && c.x < window.innerWidth + 200 && c.y > -200 && c.y < window.innerHeight + 200));
+      }).filter(c => c.x > -250 && c.x < window.innerWidth + 250 && c.y > -250 && c.y < window.innerHeight + 250));
 
       setGameState(prev => {
         if (prev.gameTime > 0 && prev.gameTime % 12 === 0 && prev.ruleShiftsApplied < Math.floor(prev.gameTime / 12)) {
@@ -184,7 +190,7 @@ const App: React.FC = () => {
       });
     }, 32);
 
-    // Spawn Loop
+    // Spawning Strategy
     spawnIntervalRef.current = window.setInterval(() => {
       setCircles(prev => {
         if (prev.length >= currentRules.maxCirclesOnScreen) return prev;
@@ -202,55 +208,65 @@ const App: React.FC = () => {
         if (gameType === 'choice') {
            const isLeft = Math.random() > 0.5;
            type = isLeft ? 'choice-left' : 'choice-right';
-           size = 180;
+           size = 160;
            x = isLeft ? window.innerWidth * 0.15 : window.innerWidth * 0.65;
            y = window.innerHeight * 0.4;
            dx = 0; dy = 0;
-           color = isLeft ? 'bg-indigo-600' : 'bg-slate-700';
+           color = isLeft ? 'bg-indigo-700' : 'bg-slate-800';
            if (currentRules.variation === 'subliminal-lean') {
-              if (isLeft) color = 'bg-indigo-500'; 
+              if (isLeft) color = 'bg-indigo-600'; // Barely perceptible difference
            }
         } else if (gameType === 'shift' && currentRules.variation === 'color-disorientation') {
-          isTarget = Math.random() > 0.4;
-          color = isTarget ? 'bg-indigo-500' : 'bg-rose-500';
+          isTarget = Math.random() > 0.5;
+          color = isTarget ? 'bg-indigo-500' : 'bg-rose-600';
+          if (Math.random() > 0.8) color = 'bg-amber-400'; // Chaos color
         } else if (gameType === 'blind' && currentRules.variation === 'static-ghost') {
-          if (Math.random() > 0.7) type = 'phantom';
+          if (Math.random() > 0.6) type = 'phantom';
         }
 
         return [...prev, { id, x, y, size, dx, dy, color, isTarget, type, spawnTime: Date.now() }];
       });
     }, currentRules.spawnInterval);
 
-    // ECHO Replay Loop
+    // ECHO: Pattern Playback
     if (gameType === 'echo') {
       const echoPlayback = window.setInterval(() => {
         setGameState(prev => {
           if (prev.echoBuffer.length > 0) {
             const last = prev.echoBuffer[0];
+            const isReverse = currentRules.variation === 'reverse-loop';
+            const index = isReverse ? prev.echoBuffer.length - 1 : 0;
+            const target = prev.echoBuffer[index];
+
             setCircles(c => [...c, {
               id: `echo-${Date.now()}`,
-              x: last.x + (currentRules.variation === 'decay-offset' ? (Math.random() - 0.5) * 50 : 0),
-              y: last.y + (currentRules.variation === 'decay-offset' ? (Math.random() - 0.5) * 50 : 0),
-              size: 50,
+              x: target.x + (currentRules.variation === 'decay-offset' ? (Math.random() - 0.5) * 80 : 0),
+              y: target.y + (currentRules.variation === 'decay-offset' ? (Math.random() - 0.5) * 80 : 0),
+              size: 55,
               dx: 0, dy: 0,
-              color: 'bg-indigo-300',
+              color: 'bg-indigo-400',
               isTarget: true,
               type: 'echo',
               spawnTime: Date.now()
             }]);
-            return { ...prev, echoBuffer: prev.echoBuffer.slice(1) };
+
+            const nextBuffer = isReverse 
+              ? prev.echoBuffer.slice(0, -1) 
+              : prev.echoBuffer.slice(1);
+
+            return { ...prev, echoBuffer: nextBuffer };
           }
           return prev;
         });
-      }, 3000);
+      }, currentRules.variation === 'time-stretch' ? 1000 : 2500);
       return () => clearInterval(echoPlayback);
     }
 
-  }, [currentRules, gameState.activeGame, applyRuleShift]);
+  }, [currentRules, gameState.activeGame, applyRuleShift, gameState.blindMaskPos.x, gameState.blindMaskPos.y]);
 
   const endGame = useCallback(() => {
     setGameState(prev => {
-      [gameIntervalRef, spawnIntervalRef, gameTimerRef, physicsIntervalRef].forEach(ref => {
+      [gameIntervalRef, spawnIntervalRef, gameTimerRef].forEach(ref => {
         if (ref.current) clearInterval(ref.current);
       });
       setCircles([]);
@@ -270,24 +286,22 @@ const App: React.FC = () => {
       let scoreGain = 0;
       let hit = isTarget;
 
-      // DELAY Logic: Reward patience
       if (prev.activeGame === 'delay') {
         const circle = circles.find(c => c.id === id);
         if (circle) {
           const aliveTime = Date.now() - circle.spawnTime;
-          scoreGain = Math.min(25, Math.floor(aliveTime / 100)); // More points for waiting
+          scoreGain = Math.min(30, Math.floor(aliveTime / 80)); 
         }
       } else if (prev.activeGame === 'shift' && prev.isLogicInverted) {
-        hit = !isTarget; // TargetDistractor flip
-        scoreGain = hit ? 15 : -10;
+        hit = !isTarget;
+        scoreGain = hit ? 20 : -15;
       } else if (prev.activeGame === 'choice') {
-        scoreGain = 20;
+        scoreGain = 25;
         hit = true;
       } else {
-        scoreGain = isTarget ? 10 : -5;
+        scoreGain = isTarget ? 10 : -8;
       }
 
-      // Record for ECHO
       const newEchoBuffer = prev.activeGame === 'echo' 
         ? [...prev.echoBuffer, { x: circles.find(c => c.id === id)?.x || 0, y: circles.find(c => c.id === id)?.y || 0, timestamp: now, type: 'click' }]
         : prev.echoBuffer;
@@ -302,7 +316,7 @@ const App: React.FC = () => {
         totalClicks: newTotal,
         accuracy: (newHits / newTotal) * 100,
         echoBuffer: newEchoBuffer,
-        message: hit ? "SIGNAL RECEIVED" : "INTERFERENCE DETECTED"
+        message: hit ? "SIGNAL LOCKED" : "BIT LOSS DETECTED"
       };
     });
 
@@ -315,8 +329,8 @@ const App: React.FC = () => {
       ...p,
       totalClicks: p.totalClicks + 1,
       accuracy: (p.hitCount / (p.totalClicks + 1)) * 100,
-      score: Math.max(0, p.score - 2),
-      message: "VOID COLLISION"
+      score: Math.max(0, p.score - 5),
+      message: "NOISE INTERFERENCE"
     }));
   };
 
@@ -329,9 +343,16 @@ const App: React.FC = () => {
 
     if (gameState.activeGame === 'weight') {
       const dist = Math.hypot(e.clientX - gameState.weightPos.x, e.clientY - gameState.weightPos.y);
-      if (dist < 150) {
+      if (dist < 200) {
         setGameState(prev => {
-          const strength = currentRules.variation === 'phantom-drag' ? 0.4 : 0.2;
+          let strength = 0.25;
+          if (currentRules.variation === 'air-resistance') {
+             const speed = Math.hypot(prev.weightPos.velocityX, prev.weightPos.velocityY);
+             strength = Math.max(0.1, 0.4 - (speed * 0.05));
+          }
+          if (currentRules.variation === 'phantom-drag' && Math.random() > 0.95) {
+             strength = strength * (Math.random() > 0.5 ? 2 : 0.5);
+          }
           return {
             ...prev,
             weightPos: {
@@ -348,7 +369,7 @@ const App: React.FC = () => {
   return (
     <div 
       className={`relative w-full h-full text-white font-mono flex flex-col items-center justify-center overflow-hidden select-none transition-all duration-700 ${
-        gameState.isRunning && gameState.activeGame === 'shift' && gameState.isLogicInverted ? 'bg-[#0a0000]' : 'bg-[#050505]'
+        gameState.isRunning && gameState.activeGame === 'shift' && gameState.isLogicInverted ? 'bg-[#0f0000]' : 'bg-[#050505]'
       }`}
       onMouseMove={handleInteraction}
     >
@@ -359,6 +380,7 @@ const App: React.FC = () => {
           <GameArea
             circles={circles}
             activeGame={gameState.activeGame}
+            variation={currentRules.variation}
             onCircleClick={handleCircleClick}
             onMissClick={handleAreaClick}
           />
@@ -367,16 +389,15 @@ const App: React.FC = () => {
             <div 
               className="absolute inset-0 pointer-events-none z-30 transition-opacity duration-1000"
               style={{
-                background: `radial-gradient(circle ${currentRules.variation === 'moving-fog' ? '140px' : '220px'} at ${gameState.blindMaskPos.x}px ${gameState.blindMaskPos.y}px, transparent 0%, rgba(0,0,0,0.99) 85%)`
+                background: `radial-gradient(circle ${currentRules.variation === 'moving-fog' ? '120px' : '200px'} at ${gameState.blindMaskPos.x}px ${gameState.blindMaskPos.y}px, transparent 0%, rgba(0,0,0,0.995) 85%)`
               }}
             >
-              {/* Static noise overlay for BLIND */}
-              <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
             </div>
           )}
 
           {gameState.activeGame === 'weight' && (
-            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]" />
+            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/simple-dashed.png')]" />
           )}
 
           <ControlPanel
@@ -389,16 +410,19 @@ const App: React.FC = () => {
       )}
 
       <Modal isOpen={modalOpen} onClose={closeModal} id={NEUROCASUAL_INSIGHT_MODAL_ID}>
-        <div className="text-gray-900 font-sans">
-          <h3 className="text-2xl font-black mb-4 tracking-tighter uppercase text-indigo-600">Neuroloop Analysis</h3>
-          <p className="italic text-lg leading-relaxed text-gray-700">{geminiInsight}</p>
-          <div className="mt-8 pt-4 border-t border-gray-100 flex justify-between items-center">
-            <span className="text-xs text-gray-400 uppercase tracking-widest font-mono">maaZone Engineering</span>
+        <div className="text-gray-900 font-sans p-2">
+          <div className="flex items-center gap-2 mb-4">
+             <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs">NL</div>
+             <h3 className="text-xl font-black tracking-tighter uppercase text-indigo-600">Cognitive Report</h3>
+          </div>
+          <p className="italic text-lg leading-relaxed text-gray-700 border-l-4 border-indigo-100 pl-4">{geminiInsight}</p>
+          <div className="mt-10 pt-4 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-mono">
+            <span className="uppercase tracking-[0.2em]">ENG: maaZone S6</span>
             <button 
               onClick={() => { closeModal(); setGameState(INITIAL_GAME_STATE); }}
-              className="px-6 py-2 bg-black text-white rounded-full font-bold hover:bg-indigo-600 transition-colors"
+              className="px-8 py-3 bg-indigo-600 text-white rounded-full font-black text-xs hover:bg-black transition-all shadow-xl active:scale-95"
             >
-              RESUME VOID
+              RESET VOID
             </button>
           </div>
         </div>
@@ -406,7 +430,7 @@ const App: React.FC = () => {
 
       <BrandingFooter 
         onAdminAccessAttempt={() => setShowAdminPanel(true)} 
-        appVersion="v1.8.0" 
+        appVersion="v1.9.1" 
       />
 
       {showAdminPanel && (
