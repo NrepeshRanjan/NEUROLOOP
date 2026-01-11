@@ -33,6 +33,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <>
+      {/* HEADER BACKGROUND - Visual Differentiation */}
+      <div className="fixed top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/90 via-black/60 to-transparent z-40 pointer-events-none border-b border-white/5" />
+
       {/* TOP LEFT: Navigation Group (Home, Back) */}
       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50 flex flex-row gap-3 md:gap-4 items-start">
          {/* Home Button */}
@@ -76,7 +79,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
       {/* TOP CENTER: Score & Status (Only if running) */}
       {isRunning && (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-40 flex flex-col items-center pointer-events-none select-none w-full max-w-[200px]">
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center pointer-events-none select-none w-full max-w-[200px]">
             <div className="text-5xl md:text-6xl font-black text-white drop-shadow-[0_0_15px_rgba(99,102,241,0.6)] tracking-tighter leading-none">
               {score}
             </div>

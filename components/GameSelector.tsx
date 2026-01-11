@@ -40,6 +40,9 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
   return (
     <div className="flex flex-col items-center w-full max-w-4xl gap-6 z-10 animate-fade-in select-none pb-32 pt-24 px-4">
        
+       {/* HEADER BACKGROUND */}
+       <div className="fixed top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/90 via-black/60 to-transparent z-40 pointer-events-none border-b border-white/5" />
+
        {/* Branding - Fixed Top Left */}
        <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50 pointer-events-none select-none text-left flex flex-col items-start">
           <h1 className="text-xl md:text-3xl font-black tracking-tighter text-indigo-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.4)] italic leading-none">
@@ -66,7 +69,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onSelect, appConfig }) => {
           </button>
        </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 w-full max-w-2xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 w-full max-w-2xl mt-4">
         {GAMES.map((game) => (
           <button
             key={game.id}

@@ -37,12 +37,9 @@ const BrandingFooter: React.FC<BrandingFooterProps> = ({ onAdminAccessAttempt, a
   }, []);
 
   return (
-    <footer className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex flex-col items-center justify-end">
-      {/* Visual Separator */}
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-indigo-900/50 to-transparent mb-0" />
-      
-      {/* Content Area */}
-      <div className="w-full bg-[#050505]/95 backdrop-blur-md pb-6 pt-4 flex flex-col items-center justify-center text-[10px] uppercase tracking-widest shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+    <footer className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none flex flex-col items-center justify-end">
+      {/* Content Area - Visually Distinct Footer Zone */}
+      <div className="w-full bg-[#050505]/95 backdrop-blur-xl pb-6 pt-4 flex flex-col items-center justify-center text-[10px] uppercase tracking-widest shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t border-gray-900/80">
         <div className="pointer-events-auto text-center group cursor-default transition-all duration-300 hover:scale-105">
            <p className="text-[10px] text-indigo-400 font-bold mb-1 tracking-[0.2em] flex items-center justify-center gap-2">
              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
