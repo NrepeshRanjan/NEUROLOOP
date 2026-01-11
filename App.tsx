@@ -202,13 +202,13 @@ const App: React.FC = () => {
         if (gameType === 'choice') {
            const isLeft = Math.random() > 0.5;
            type = isLeft ? 'choice-left' : 'choice-right';
-           size = 120;
-           x = isLeft ? window.innerWidth * 0.2 : window.innerWidth * 0.7;
+           size = 180;
+           x = isLeft ? window.innerWidth * 0.15 : window.innerWidth * 0.65;
            y = window.innerHeight * 0.4;
            dx = 0; dy = 0;
            color = isLeft ? 'bg-indigo-600' : 'bg-slate-700';
            if (currentRules.variation === 'subliminal-lean') {
-              if (isLeft) color = 'bg-indigo-500'; // Slightly brighter
+              if (isLeft) color = 'bg-indigo-500'; 
            }
         } else if (gameType === 'shift' && currentRules.variation === 'color-disorientation') {
           isTarget = Math.random() > 0.4;
@@ -347,7 +347,9 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="relative w-full h-full bg-[#050505] text-white font-mono flex flex-col items-center justify-center overflow-hidden select-none"
+      className={`relative w-full h-full text-white font-mono flex flex-col items-center justify-center overflow-hidden select-none transition-all duration-700 ${
+        gameState.isRunning && gameState.activeGame === 'shift' && gameState.isLogicInverted ? 'bg-[#0a0000]' : 'bg-[#050505]'
+      }`}
       onMouseMove={handleInteraction}
     >
       {!gameState.activeGame && !gameState.isRunning ? (
@@ -356,6 +358,7 @@ const App: React.FC = () => {
         <>
           <GameArea
             circles={circles}
+            activeGame={gameState.activeGame}
             onCircleClick={handleCircleClick}
             onMissClick={handleAreaClick}
           />
@@ -364,9 +367,16 @@ const App: React.FC = () => {
             <div 
               className="absolute inset-0 pointer-events-none z-30 transition-opacity duration-1000"
               style={{
-                background: `radial-gradient(circle ${currentRules.variation === 'moving-fog' ? '120px' : '200px'} at ${gameState.blindMaskPos.x}px ${gameState.blindMaskPos.y}px, transparent 0%, rgba(0,0,0,0.98) 85%)`
+                background: `radial-gradient(circle ${currentRules.variation === 'moving-fog' ? '140px' : '220px'} at ${gameState.blindMaskPos.x}px ${gameState.blindMaskPos.y}px, transparent 0%, rgba(0,0,0,0.99) 85%)`
               }}
-            />
+            >
+              {/* Static noise overlay for BLIND */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
+            </div>
+          )}
+
+          {gameState.activeGame === 'weight' && (
+            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]" />
           )}
 
           <ControlPanel
@@ -396,7 +406,7 @@ const App: React.FC = () => {
 
       <BrandingFooter 
         onAdminAccessAttempt={() => setShowAdminPanel(true)} 
-        appVersion="v1.7.2" 
+        appVersion="v1.8.0" 
       />
 
       {showAdminPanel && (
