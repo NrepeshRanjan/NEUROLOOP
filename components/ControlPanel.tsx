@@ -38,11 +38,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
          {/* Home Button */}
          <button 
             onClick={onHome} 
-            className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gray-900/90 border-2 border-gray-700 hover:border-indigo-500 text-gray-400 hover:text-indigo-500 transition-all shadow-lg active:scale-90 backdrop-blur-sm group"
+            className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-gray-900/90 border-2 border-gray-700 hover:border-indigo-500 text-gray-400 hover:text-indigo-500 transition-all shadow-lg active:scale-90 backdrop-blur-sm group"
             aria-label="Home"
             style={{ touchAction: 'manipulation' }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </button>
@@ -51,11 +51,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           {isRunning && (
             <button 
               onClick={onEndGame} 
-              className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gray-900/90 border-2 border-gray-700 hover:border-red-500 text-gray-400 hover:text-red-500 transition-all shadow-lg active:scale-90 backdrop-blur-sm group"
+              className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-gray-900/90 border-2 border-gray-700 hover:border-red-500 text-gray-400 hover:text-red-500 transition-all shadow-lg active:scale-90 backdrop-blur-sm group"
               aria-label="End Game"
               style={{ touchAction: 'manipulation' }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
@@ -66,11 +66,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50">
           <button 
             onClick={toggleSound}
-            className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gray-900/90 border-2 transition-all shadow-lg active:scale-90 backdrop-blur-sm group ${isMuted ? 'border-red-500/50 text-red-400' : 'border-indigo-500/50 text-indigo-400'}`}
+            className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-gray-900/90 border-2 transition-all shadow-lg active:scale-90 backdrop-blur-sm group ${isMuted ? 'border-red-500/50 text-red-400' : 'border-indigo-500/50 text-indigo-400'}`}
              aria-label={isMuted ? "Unmute" : "Mute"}
              style={{ touchAction: 'manipulation' }}
           >
-             <span className="text-xl group-hover:scale-110 transition-transform">{isMuted ? '🔇' : '🔊'}</span>
+             <span className="text-lg md:text-xl group-hover:scale-110 transition-transform">{isMuted ? '🔇' : '🔊'}</span>
           </button>
       </div>
 
