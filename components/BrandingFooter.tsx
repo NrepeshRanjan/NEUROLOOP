@@ -37,17 +37,17 @@ const BrandingFooter: React.FC<BrandingFooterProps> = ({ onAdminAccessAttempt, a
   }, []);
 
   return (
-    <footer className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none flex flex-col items-center justify-end">
-      {/* Content Area - Visually Distinct Footer Zone */}
-      <div className="w-full bg-[#050505]/95 backdrop-blur-xl pb-6 pt-4 flex flex-col items-center justify-center text-[10px] uppercase tracking-widest shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t border-gray-900/80">
-        <div className="pointer-events-auto text-center group cursor-default transition-all duration-300 hover:scale-105">
-           <p className="text-[10px] text-indigo-400 font-bold mb-1 tracking-[0.2em] flex items-center justify-center gap-2">
-             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+    <footer className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center justify-center">
+      {/* Solid Black Footer Strip */}
+      <div className="w-full h-16 bg-black border-t border-gray-800 flex flex-col items-center justify-center text-[10px] uppercase tracking-widest shadow-2xl">
+        <div className="text-center group cursor-default">
+           <p className="text-[10px] text-gray-500 font-bold mb-1 tracking-[0.2em] flex items-center justify-center gap-2">
+             <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
              POWERED BY <span className="text-white font-black">maaZone</span>
            </p>
            <p className="text-[8px] text-gray-700 font-mono">
              NEUROLOOP ENGINE <span 
-               className="cursor-pointer hover:text-indigo-500 transition-colors text-gray-600" 
+               className="cursor-pointer hover:text-indigo-500 transition-colors text-gray-800" 
                onClick={handleVersionClick}
              >
                {appVersion}
