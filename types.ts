@@ -17,9 +17,12 @@ export interface GameState {
   ruleShiftsApplied: number;
   message: string;
   // Specific game state data
-  echoBuffer: Array<{ x: number, y: number, timestamp: number }>;
+  echoBuffer: Array<{ x: number, y: number, timestamp: number, type: string }>;
   weightPos: { x: number, y: number, velocityX: number, velocityY: number };
   blindMaskPos: { x: number, y: number };
+  isLogicInverted: boolean; // For SHIFT ghost-rule
+  lastChoiceTime: number; // For CHOICE
+  patienceFactor: number; // For DELAY
 }
 
 export interface GameRule {
@@ -43,7 +46,10 @@ export interface CircleData {
   dy: number; 
   color: string; 
   isTarget: boolean;
-  type?: 'echo' | 'phantom' | 'standard';
+  type?: 'echo' | 'phantom' | 'standard' | 'choice-left' | 'choice-right';
+  opacity?: number;
+  scale?: number;
+  spawnTime: number;
 }
 
 export interface Admin {
